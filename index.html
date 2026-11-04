@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Upload asset Excel files, match against the Asset Master API, and download results." />
+  <title>Asset Master Matcher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <!-- SheetJS for reading Excel/CSV -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <!-- ExcelJS for styled workbook export -->
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <!-- FileSaver fallback for ExcelJS writeBuffer downloads -->
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="topbar">
+    <div class="topbar__inner">
+      <div class="brand" aria-label="Asset Master Matcher">
+        <img
+          class="brand__logo"
+          src="assetcues-logo.png"
+          alt="AssetCues"
+          width="180"
+          height="48"
+          decoding="async"
+        />
+        <div class="brand__text">
+          <h1 class="brand__title">Asset Master Matcher</h1>
+          <p class="brand__tagline">Excel / JSON → API → Excel</p>
+        </div>
+      </div>
+      <div class="topbar__actions">
+        <button type="button" class="icon-btn" id="btnTheme" aria-label="Toggle light and dark theme" title="Toggle theme">
+          <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+          </svg>
+          <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 14.5A8.5 8.5 0 0 1 9.5 3 7 7 0 1 0 21 14.5z"/>
+          </svg>
+        </button>
+        <button type="button" class="icon-btn" id="btnSettings" aria-label="Open settings" title="Settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="main">
+    <section class="hero" aria-labelledby="heroHeading">
+      <h2 id="heroHeading" class="hero__title">Match assets to your master catalog</h2>
+      <p class="hero__sub">Upload a spreadsheet or paste JSON, send it to the matching API, and download a flattened results workbook.</p>
+    </section>
+
+    <nav class="stepper" aria-label="Workflow steps">
+      <ol class="stepper__list" id="stepperList">
+        <li class="stepper__item is-active" data-step="1">
+          <span class="stepper__badge" aria-hidden="true">1</span>
+          <span class="stepper__label">Upload</span>
+        </li>
+        <li class="stepper__item" data-step="2">
+          <span class="stepper__badge" aria-hidden="true">2</span>
+          <span class="stepper__label">Review</span>
+        </li>
+        <li class="stepper__item" data-step="3">
+          <span class="stepper__badge" aria-hidden="true">3</span>
+          <span class="stepper__label">Process</span>
+        </li>
+        <li class="stepper__item" data-step="4">
+          <span class="stepper__badge" aria-hidden="true">4</span>
+          <span class="stepper__label">Download</span>
+        </li>
+      </ol>
+    </nav>
+
+    <!-- STEP 1: Upload -->
+    <section class="panel step-panel is-visible" id="stepUpload" data-step="1" aria-labelledby="uploadHeading">
+      <div class="card">
+        <div class="card__header">
+          <h3 id="uploadHeading">Provide your assets</h3>
+          <button type="button" class="btn btn--secondary btn--sm" id="btnTemplate">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Download input template
+          </button>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="Input type">
+          <button type="button" role="tab" class="tab is-active" id="tabExcel" aria-selected="true" aria-controls="panelExcel">Excel / CSV</button>
+          <button type="button" role="tab" class="tab" id="tabJson" aria-selected="false" aria-controls="panelJson">JSON</button>
+        </div>
+
+        <div id="panelExcel" role="tabpanel" aria-labelledby="tabExcel">
+        <div
+          class="dropzone"
+          id="dropzone"
+          role="button"
+          tabindex="0"
+          aria-controls="fileInput"
+          aria-describedby="dropzoneHint"
+        >
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" hidden />
+          <div class="dropzone__icon" aria-hidden="true">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <path d="M12 18v-6M9 15l3-3 3 3"/>
+            </svg>
+          </div>
+          <p class="dropzone__title">Drop your Excel file here or browse</p>
+          <p class="dropzone__hint" id="dropzoneHint">Accepts .xlsx, .xls, or .csv · First sheet only</p>
+          <button type="button" class="btn btn--primary" id="btnBrowse">Browse files</button>
+        </div>
+        </div>
+
+        <div id="panelJson" role="tabpanel" aria-labelledby="tabJson" hidden>
+          <p class="muted json-hint">
+            Paste the API request body: <code>{ "requests": [ { "CustomerId": …, "assets": [ … ] } ] }</code>
+            or the legacy <code>{ "CustomerId": …, "assets": [ … ] }</code>.
+          </p>
+          <label class="sr-only" for="jsonInput">JSON request body</label>
+          <textarea id="jsonInput" class="field__input json-input" rows="14" spellcheck="false" placeholder='{
+  "requests": [
+    {
+      "CustomerId": 1004,
+      "assets": [
+        { "AssetName": "hdd 16 gb ram", "CategoryId": 1039, "AssetClassId": 1107 }
+      ]
+    }
+  ]
+}'></textarea>
+          <input type="file" id="jsonFileInput" accept=".json,application/json" hidden />
+          <div class="actions">
+            <button type="button" class="btn btn--secondary" id="btnLoadJsonFile">Load .json file</button>
+            <button type="button" class="btn btn--primary" id="btnParseJson">Review JSON</button>
+          </div>
+        </div>
+
+        <p class="field-error" id="uploadError" role="alert" hidden></p>
+
+        <div class="file-meta" id="fileMeta" hidden>
+          <div class="file-meta__icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div class="file-meta__body">
+            <p class="file-meta__name" id="fileName">—</p>
+            <p class="file-meta__detail" id="fileDetail">—</p>
+          </div>
+          <button type="button" class="btn btn--ghost btn--sm" id="btnClearFile" aria-label="Remove file">Remove</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 2: Review -->
+    <section class="panel step-panel" id="stepReview" data-step="2" aria-labelledby="reviewHeading" hidden>
+      <div class="card">
+        <div class="card__header">
+          <h3 id="reviewHeading">Review parsed assets</h3>
+          <div class="chip-row" id="summaryChips" aria-live="polite"></div>
+        </div>
+
+        <div class="alert alert--warning" id="validationAlert" hidden>
+          <div class="alert__header">
+            <details class="validation-details" id="validationDetails">
+              <summary class="validation-details__summary">
+                <span id="validationTitle">Validation issues found</span>
+                <span class="validation-details__hint">Click to view details</span>
+              </summary>
+              <p class="validation-details__summary-text" id="validationSummary"></p>
+              <div class="error-table-wrap" id="validationErrorWrap"></div>
+            </details>
+            <button type="button" class="btn btn--secondary btn--sm" id="btnContinueValid" hidden>Continue with valid rows</button>
+          </div>
+        </div>
+
+        <div class="table-wrap" id="previewTableWrap">
+          <table class="data-table" id="previewTable">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="muted" id="previewNote"></p>
+
+        <details class="json-panel" id="requestJsonPanel">
+          <summary>View request JSON</summary>
+          <div class="json-panel__toolbar">
+            <button type="button" class="btn btn--ghost btn--sm" id="btnCopyRequest">Copy JSON</button>
+          </div>
+          <pre class="json-panel__code" id="requestJson" tabindex="0"></pre>
+        </details>
+
+        <div class="actions">
+          <button type="button" class="btn btn--secondary" id="btnBackUpload">Back</button>
+          <button type="button" class="btn btn--primary" id="btnProcess">Process matching</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 3: Process -->
+    <section class="panel step-panel" id="stepProcess" data-step="3" aria-labelledby="processHeading" hidden>
+      <div class="card card--center">
+        <h3 id="processHeading" class="sr-only">Processing</h3>
+        <div class="progress" id="progress" role="status" aria-live="polite" aria-busy="true">
+          <div class="spinner" aria-hidden="true"></div>
+          <p class="progress__label" id="progressLabel">Preparing…</p>
+          <ol class="progress__steps" id="progressSteps">
+            <li data-phase="parsing">Parsing</li>
+            <li data-phase="calling">Calling API</li>
+            <li data-phase="building">Building Excel</li>
+          </ol>
+          <div class="progress__bar" aria-hidden="true"><span id="progressBar"></span></div>
+        </div>
+        <div class="alert alert--error" id="processError" hidden>
+          <strong id="processErrorTitle">Something went wrong</strong>
+          <p id="processErrorBody"></p>
+          <div class="actions actions--inline">
+            <button type="button" class="btn btn--primary" id="btnRetry">Retry</button>
+            <button type="button" class="btn btn--secondary" id="btnCancelProcess">Cancel</button>
+          </div>
+        </div>
+        <button type="button" class="btn btn--secondary" id="btnCancelApi" hidden>Cancel request</button>
+      </div>
+    </section>
+
+    <!-- STEP 4: Download -->
+    <section class="panel step-panel" id="stepDownload" data-step="4" aria-labelledby="downloadHeading" hidden>
+      <div class="card">
+        <div class="card__header">
+          <h3 id="downloadHeading">Matching complete</h3>
+          <button type="button" class="btn btn--secondary btn--sm" id="btnReset">Start new request</button>
+        </div>
+
+        <div class="stat-grid" id="statGrid" aria-live="polite"></div>
+
+        <div class="actions actions--prominent">
+          <button type="button" class="btn btn--primary btn--lg" id="btnDownload">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Download Excel
+          </button>
+          <button type="button" class="btn btn--secondary btn--lg" id="btnStartNew">
+            Start new request
+          </button>
+        </div>
+        <p class="muted download-hint">Done? Download your results, or start a new request to upload more assets (Excel or JSON).</p>
+
+        <div class="table-wrap table-wrap--results" id="resultsTableWrap">
+          <table class="data-table data-table--results" id="resultsTable">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="muted" id="resultsNote"></p>
+
+        <details class="json-panel" id="responseJsonPanel">
+          <summary>View response JSON</summary>
+          <div class="json-panel__toolbar">
+            <button type="button" class="btn btn--ghost btn--sm" id="btnCopyResponse">Copy JSON</button>
+          </div>
+          <pre class="json-panel__code" id="responseJson" tabindex="0"></pre>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <!-- Settings drawer -->
+  <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+  <aside class="drawer" id="settingsDrawer" aria-labelledby="settingsTitle" aria-hidden="true" role="dialog">
+    <div class="drawer__header">
+      <h2 id="settingsTitle">Settings</h2>
+      <button type="button" class="icon-btn" id="btnCloseSettings" aria-label="Close settings">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="drawer__body">
+      <label class="field">
+        <span class="field__label">API URL</span>
+        <input type="url" id="settingApiUrl" class="field__input" placeholder="http://localhost:7071/api/asset_master_match" autocomplete="off" />
+      </label>
+
+      <fieldset class="field">
+        <legend class="field__label">Optional headers</legend>
+        <div id="headerRows" class="header-rows"></div>
+        <button type="button" class="btn btn--ghost btn--sm" id="btnAddHeader">+ Add header</button>
+      </fieldset>
+
+      <label class="field">
+        <span class="field__label">Max assets per request</span>
+        <input type="number" id="settingMaxAssets" class="field__input" min="1" max="50" step="1" placeholder="50" />
+        <span class="field__hint">1–50 (API limit is 50). Assets are grouped by CustomerId and split into as many requests as needed; results are merged in order.</span>
+      </label>
+
+      <label class="toggle">
+        <input type="checkbox" id="settingDemoMode" />
+        <span class="toggle__track" aria-hidden="true"></span>
+        <span class="toggle__label">Demo mode <span class="muted">(skip network, use sample response)</span></span>
+      </label>
+
+      <label class="toggle">
+        <input type="checkbox" id="settingIncludePayloadSheet" />
+        <span class="toggle__track" aria-hidden="true"></span>
+        <span class="toggle__label">Include “Request Payload” sheet in Excel</span>
+      </label>
+    </div>
+    <div class="drawer__footer">
+      <button type="button" class="btn btn--secondary" id="btnResetSettings">Reset defaults</button>
+      <button type="button" class="btn btn--primary" id="btnSaveSettings">Save</button>
+    </div>
+  </aside>
+
+  <!-- Toasts -->
+  <div class="toast-region" id="toastRegion" aria-live="polite" aria-relevant="additions"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

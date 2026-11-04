@@ -1,0 +1,47 @@
+# Dependencies (app loads SheetJS / ExcelJS from CDN; local installs are optional)
+node_modules/
+package-lock.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env / secrets (if added later for deploy tooling)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+secrets.json
+
+# Local test uploads / downloads (keep repo free of sample data dumps)
+*.xlsx
+*.xls
+*.csv
+!templates/**
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs / caches
+*.log
+.cache/
+.temp/
+.tmp/
+dist/
+build/
+.vercel/
+.netlify/
+
+# Local agent / scratch notes (not for remote)
+cursor.md
+cursor_prompt_asset_master_ui.md
