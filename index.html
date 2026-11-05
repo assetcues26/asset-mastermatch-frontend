@@ -187,7 +187,14 @@
             <tbody></tbody>
           </table>
         </div>
-        <p class="muted" id="previewNote"></p>
+        <div class="table-pager" id="previewPager">
+          <p class="muted" id="previewNote"></p>
+          <div class="table-pager__controls" id="previewPagerControls" hidden>
+            <button type="button" class="btn btn--secondary btn--sm" id="btnPreviewPrev">Prev</button>
+            <span class="table-pager__label" id="previewPageLabel"></span>
+            <button type="button" class="btn btn--secondary btn--sm" id="btnPreviewNext">Next</button>
+          </div>
+        </div>
 
         <details class="json-panel" id="requestJsonPanel">
           <summary>View request JSON</summary>
@@ -257,7 +264,14 @@
             <tbody></tbody>
           </table>
         </div>
-        <p class="muted" id="resultsNote"></p>
+        <div class="table-pager" id="resultsPager">
+          <p class="muted" id="resultsNote"></p>
+          <div class="table-pager__controls" id="resultsPagerControls" hidden>
+            <button type="button" class="btn btn--secondary btn--sm" id="btnResultsPrev">Prev</button>
+            <span class="table-pager__label" id="resultsPageLabel"></span>
+            <button type="button" class="btn btn--secondary btn--sm" id="btnResultsNext">Next</button>
+          </div>
+        </div>
 
         <details class="json-panel" id="responseJsonPanel">
           <summary>View response JSON</summary>

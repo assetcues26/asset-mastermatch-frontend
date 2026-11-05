@@ -759,8 +759,9 @@ html[data-theme="dark"] .icon-moon {
   border-bottom: 1px solid var(--border-strong);
 }
 
-.data-table--results th:first-child,
-.data-table--results td:first-child {
+/* Freeze AssetName (2nd column) on preview + results; CustomerId scrolls with the rest */
+.data-table th:nth-child(2),
+.data-table td:nth-child(2) {
   position: sticky;
   left: 0;
   z-index: 1;
@@ -768,7 +769,7 @@ html[data-theme="dark"] .icon-moon {
   box-shadow: 2px 0 4px rgba(0, 0, 0, 0.04);
 }
 
-.data-table--results th:first-child {
+.data-table th:nth-child(2) {
   z-index: 3;
   background: var(--bg);
 }
@@ -777,8 +778,30 @@ html[data-theme="dark"] .icon-moon {
   background: color-mix(in srgb, var(--primary-soft) 50%, var(--surface));
 }
 
-.data-table--results tbody tr:hover td:first-child {
+.data-table tbody tr:hover td:nth-child(2) {
   background: color-mix(in srgb, var(--primary-soft) 50%, var(--surface));
+}
+
+.table-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.65rem;
+}
+
+.table-pager__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.table-pager__label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  min-width: 6.5rem;
+  text-align: center;
 }
 
 .badge {

@@ -22,7 +22,7 @@
   const API_TIMEOUT_MS = 180_000;
   /** API hard limit: total assets across all customers in one request. */
   const MAX_ASSETS_PER_REQUEST = 50;
-  const PREVIEW_ROW_LIMIT = 100;
+  const PAGE_SIZE = 50;
   /** Empty / missing optional fields are sent as JSON `null` (key always present). */
   const OPTIONAL_EMPTY = null;
 
@@ -221,6 +221,8 @@
     workbookBuffer: null,
     autoDownloaded: false,
     abortController: null,
+    previewPage: 1,
+    resultsPage: 1,
     settings: loadSettings(),
   };
 
@@ -1050,6 +1052,8 @@
     state.workbookBuffer = null;
     state.autoDownloaded = false;
     state.abortController = null;
+    state.previewPage = 1;
+    state.resultsPage = 1;
 
     $("#fileInput").value = "";
     $("#jsonFileInput").value = "";
@@ -1081,6 +1085,41 @@
     $("#panelJson").hidden = !isJson;
     $("#btnTemplate").hidden = isJson;
     $("#uploadError").hidden = true;
+  }
+
+  function pageInfo(total, page) {
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE) || 1);
+    const current = Math.min(Math.max(1, page || 1), totalPages);
+    const start = total === 0 ? 0 : (current - 1) * PAGE_SIZE;
+    const end = Math.min(start + PAGE_SIZE, total);
+    return { total, totalPages, current, start, end };
+  }
+
+  function updatePager(controlsId, noteId, labelId, prevId, nextId, info, emptyText, allText, rangeText) {
+    const controls = $(controlsId);
+    const note = $(noteId);
+    const label = $(labelId);
+    const prev = $(prevId);
+    const next = $(nextId);
+    if (!note) return;
+
+    if (info.total === 0) {
+      note.textContent = emptyText;
+      if (controls) controls.hidden = true;
+      return;
+    }
+
+    if (info.totalPages <= 1) {
+      note.textContent = allText(info.total);
+      if (controls) controls.hidden = true;
+      return;
+    }
+
+    note.textContent = rangeText(info.start + 1, info.end, info.total);
+    if (controls) controls.hidden = false;
+    if (label) label.textContent = `Page ${info.current} of ${info.totalPages}`;
+    if (prev) prev.disabled = info.current <= 1;
+    if (next) next.disabled = info.current >= info.totalPages;
   }
 
   function renderPreview() {
@@ -1139,7 +1178,7 @@
       $("#btnProcess").disabled = state.validRows.length === 0;
     }
 
-    // Preview table
+    // Preview table (paginated)
     const table = $("#previewTable");
     const thead = table.querySelector("thead");
     const tbody = table.querySelector("tbody");
@@ -1150,7 +1189,10 @@
     CANONICAL_HEADERS.forEach((h) => headRow.appendChild(el("th", { text: h })));
     thead.appendChild(headRow);
 
-    const slice = state.validRows.slice(0, PREVIEW_ROW_LIMIT);
+    const total = state.validRows.length;
+    const info = pageInfo(total, state.previewPage);
+    state.previewPage = info.current;
+    const slice = state.validRows.slice(info.start, info.end);
     slice.forEach((row) => {
       const tr = el("tr");
       CANONICAL_HEADERS.forEach((h) => {
@@ -1160,12 +1202,17 @@
       tbody.appendChild(tr);
     });
 
-    const total = state.validRows.length;
-    $("#previewNote").textContent = total > PREVIEW_ROW_LIMIT
-      ? `Showing first ${PREVIEW_ROW_LIMIT} of ${total} valid rows.`
-      : total
-        ? `Showing all ${total} valid row${total === 1 ? "" : "s"}.`
-        : "No valid rows to preview.";
+    updatePager(
+      "#previewPagerControls",
+      "#previewNote",
+      "#previewPageLabel",
+      "#btnPreviewPrev",
+      "#btnPreviewNext",
+      info,
+      "No valid rows to preview.",
+      (n) => `Showing all ${n} valid row${n === 1 ? "" : "s"}.`,
+      (from, to, n) => `Showing ${from}–${to} of ${n} valid rows.`,
+    );
 
     $("#requestJson").textContent = JSON.stringify(state.payload, null, 2);
   }
@@ -1225,7 +1272,10 @@
     columns.forEach((h) => headRow.appendChild(el("th", { text: h })));
     thead.appendChild(headRow);
 
-    const slice = (state.results || []).slice(0, PREVIEW_ROW_LIMIT);
+    const total = (state.results || []).length;
+    const info = pageInfo(total, state.resultsPage);
+    state.resultsPage = info.current;
+    const slice = (state.results || []).slice(info.start, info.end);
     slice.forEach((item) => {
       const flat = flatten(item);
       const tr = el("tr");
@@ -1247,10 +1297,17 @@
       tbody.appendChild(tr);
     });
 
-    const total = (state.results || []).length;
-    $("#resultsNote").textContent = total > PREVIEW_ROW_LIMIT
-      ? `Showing first ${PREVIEW_ROW_LIMIT} of ${total} results. Full set is in the Excel download.`
-      : `Showing all ${total} result row${total === 1 ? "" : "s"}.`;
+    updatePager(
+      "#resultsPagerControls",
+      "#resultsNote",
+      "#resultsPageLabel",
+      "#btnResultsPrev",
+      "#btnResultsNext",
+      info,
+      "No results to show.",
+      (n) => `Showing all ${n} result row${n === 1 ? "" : "s"}.`,
+      (from, to, n) => `Showing ${from}–${to} of ${n} results.`,
+    );
 
     $("#responseJson").textContent = JSON.stringify({ results: state.results }, null, 2);
   }
@@ -1360,6 +1417,7 @@
       state.validRows = parsed.rows;
       state.errors = parsed.errors;
       state.rawRows = parsed.rows;
+      state.previewPage = 1;
 
       const errorRowCount = new Set(parsed.errors.map((e) => e.row)).size;
       const displayedRows = parsed.rows.length + (parsed.missingRequiredCols?.length ? 0 : errorRowCount);
@@ -1391,6 +1449,7 @@
       state.validRows = parsed.rows;
       state.errors = parsed.errors;
       state.rawRows = parsed.rows;
+      state.previewPage = 1;
 
       const errorRowCount = new Set(parsed.errors.map((e) => e.row)).size;
       showFileMeta(sourceName, null, parsed.rows.length + errorRowCount);
@@ -1446,6 +1505,7 @@
         setProgress("calling", pct, label);
       });
       state.results = response.results;
+      state.resultsPage = 1;
 
       setProgress("building", 80, "Building Excel workbook…");
       const built = await buildWorkbook(state.results, {
@@ -1462,10 +1522,7 @@
       renderResults();
       goToStep(4);
 
-      // Auto-trigger download once
-      downloadBuffer(state.workbookBuffer, built.fileName);
-      state.autoDownloaded = true;
-      toast("Results ready — Excel downloaded", "success");
+      toast("Results ready — download Excel when you want", "success");
     } catch (err) {
       $("#btnCancelApi").hidden = true;
       $("#progress").hidden = true;
@@ -1553,6 +1610,28 @@
       state.errors = [];
       renderPreview();
       toast("Continuing with valid rows only", "info");
+    });
+    $("#btnPreviewPrev").addEventListener("click", () => {
+      if (state.previewPage <= 1) return;
+      state.previewPage -= 1;
+      renderPreview();
+    });
+    $("#btnPreviewNext").addEventListener("click", () => {
+      const info = pageInfo(state.validRows.length, state.previewPage);
+      if (state.previewPage >= info.totalPages) return;
+      state.previewPage += 1;
+      renderPreview();
+    });
+    $("#btnResultsPrev").addEventListener("click", () => {
+      if (state.resultsPage <= 1) return;
+      state.resultsPage -= 1;
+      renderResults();
+    });
+    $("#btnResultsNext").addEventListener("click", () => {
+      const info = pageInfo((state.results || []).length, state.resultsPage);
+      if (state.resultsPage >= info.totalPages) return;
+      state.resultsPage += 1;
+      renderResults();
     });
     $("#btnProcess").addEventListener("click", runProcess);
     $("#btnRetry").addEventListener("click", runProcess);
