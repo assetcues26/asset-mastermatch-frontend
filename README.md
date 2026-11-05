@@ -62,9 +62,11 @@ Headers are matched case/space/underscore-insensitively. Rows are grouped by `Cu
 | File | Role |
 |---|---|
 | `index.html` | Markup + CDN scripts (SheetJS, ExcelJS, FileSaver) |
-| `styles.css` | Theme, layout, components, dark mode |
-| `app.js` | Parse, validate, API, flatten, Excel export, UI |
+| `styles.css` | Single light theme, layout, components |
+| `app.js` | Parse, validate, API, flatten, Excel export, UI state |
+| `ui.js` | Presentation-only polish (glass scroll, video play/pause, toasts, etc.) |
 | `assetcues-logo.png` | AssetCues brand logo in the top bar |
+| `assetcues-animation.webm` | Looping brand animation shown during Process |
 | `README.md` | This guide |
 | `.gitignore` | Ignores `node_modules`, local Excel/CSV, env files, IDE junk |
 
@@ -74,8 +76,10 @@ This is a static site: publish at least:
 
 - `index.html`
 - `app.js`
+- `ui.js`
 - `styles.css`
 - `assetcues-logo.png`
+- `assetcues-animation.webm`
 - `README.md` (optional)
 
 to any static host (Azure Static Web Apps, App Service static site, Netlify, etc.). No build step.

@@ -17,7 +17,6 @@
   const DEFAULT_API_URL = "http://localhost:7071/api/asset_master_match";
 
   const STORAGE_KEY = "assetMasterMatcher.settings.v1";
-  const THEME_KEY = "assetMasterMatcher.theme.v1";
   /** Per HTTP request; matches the Function's functionTimeout headroom. */
   const API_TIMEOUT_MS = 180_000;
   /** API hard limit: total assets across all customers in one request. */
@@ -321,46 +320,6 @@
   function saveSettings(next) {
     state.settings = { ...state.settings, ...next };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state.settings));
-  }
-
-  // ===========================================================================
-  // THEME (light / dark only — separate from Settings)
-  // ===========================================================================
-
-  function systemTheme() {
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  }
-
-  function getStoredTheme() {
-    try {
-      const t = localStorage.getItem(THEME_KEY);
-      return t === "light" || t === "dark" ? t : null;
-    } catch {
-      return null;
-    }
-  }
-
-  function applyTheme(theme) {
-    const next = theme === "dark" ? "dark" : "light";
-    document.documentElement.setAttribute("data-theme", next);
-    const btn = $("#btnTheme");
-    if (btn) {
-      btn.setAttribute("aria-label", next === "dark" ? "Switch to light theme" : "Switch to dark theme");
-      btn.title = next === "dark" ? "Switch to light" : "Switch to dark";
-    }
-  }
-
-  function initTheme() {
-    applyTheme(getStoredTheme() || systemTheme());
-  }
-
-  function toggleTheme() {
-    const current = document.documentElement.getAttribute("data-theme") || systemTheme();
-    const next = current === "dark" ? "light" : "dark";
-    try {
-      localStorage.setItem(THEME_KEY, next);
-    } catch { /* ignore */ }
-    applyTheme(next);
   }
 
   // ===========================================================================
@@ -1660,7 +1619,6 @@
       copyText($("#responseJson").textContent || "").then(() => toast("Response JSON copied", "success"));
     });
 
-    $("#btnTheme").addEventListener("click", toggleTheme);
     $("#btnSettings").addEventListener("click", openSettings);
     $("#btnCloseSettings").addEventListener("click", closeSettings);
     $("#drawerBackdrop").addEventListener("click", closeSettings);
@@ -1703,9 +1661,7 @@
   };
 
   // Boot
-  initTheme();
   document.addEventListener("DOMContentLoaded", () => {
-    initTheme();
     bindEvents();
     setInputMode("excel");
     goToStep(1);

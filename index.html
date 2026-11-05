@@ -2,9 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light" />
+  <meta name="theme-color" content="#F6F7FB" />
   <meta name="description" content="Upload asset Excel files, match against the Asset Master API, and download results." />
-  <title>Asset Master Matcher</title>
+  <title>Asset Master Matcher · assetcues</title>
+  <link rel="icon" type="image/png" href="assetcues-logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -18,10 +21,11 @@
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
+  <div class="page-bg" aria-hidden="true"></div>
 
-  <header class="topbar">
+  <header class="topbar" id="topbar">
     <div class="topbar__inner">
-      <div class="brand" aria-label="Asset Master Matcher">
+      <div class="brand">
         <img
           class="brand__logo"
           src="assetcues-logo.png"
@@ -36,17 +40,8 @@
         </div>
       </div>
       <div class="topbar__actions">
-        <button type="button" class="icon-btn" id="btnTheme" aria-label="Toggle light and dark theme" title="Toggle theme">
-          <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="4"/>
-            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
-          </svg>
-          <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 14.5A8.5 8.5 0 0 1 9.5 3 7 7 0 1 0 21 14.5z"/>
-          </svg>
-        </button>
         <button type="button" class="icon-btn" id="btnSettings" aria-label="Open settings" title="Settings">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="3"/>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
           </svg>
@@ -88,7 +83,7 @@
         <div class="card__header">
           <h3 id="uploadHeading">Provide your assets</h3>
           <button type="button" class="btn btn--secondary btn--sm" id="btnTemplate">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
             Download input template
           </button>
         </div>
@@ -104,20 +99,23 @@
           id="dropzone"
           role="button"
           tabindex="0"
+          aria-label="Upload an Excel or CSV file: drop it here, or press Enter to browse"
           aria-controls="fileInput"
           aria-describedby="dropzoneHint"
         >
           <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" hidden />
           <div class="dropzone__icon" aria-hidden="true">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
               <polyline points="14 2 14 8 20 8"/>
               <path d="M12 18v-6M9 15l3-3 3 3"/>
             </svg>
           </div>
           <p class="dropzone__title">Drop your Excel file here or browse</p>
-          <p class="dropzone__hint" id="dropzoneHint">Accepts .xlsx, .xls, or .csv · First sheet only</p>
-          <button type="button" class="btn btn--primary" id="btnBrowse">Browse files</button>
+          <p class="dropzone__hint" id="dropzoneHint">
+            Accepts <span class="ext-pill">.xlsx</span> <span class="ext-pill">.xls</span> <span class="ext-pill">.csv</span> · first sheet only
+          </p>
+          <span class="btn btn--primary" id="btnBrowse" aria-hidden="true">Browse files</span>
         </div>
         </div>
 
@@ -148,7 +146,7 @@
 
         <div class="file-meta" id="fileMeta" hidden>
           <div class="file-meta__icon" aria-hidden="true">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8M8 17h5"/></svg>
           </div>
           <div class="file-meta__body">
             <p class="file-meta__name" id="fileName">—</p>
@@ -181,11 +179,13 @@
           </div>
         </div>
 
-        <div class="table-wrap" id="previewTableWrap">
-          <table class="data-table" id="previewTable">
-            <thead></thead>
-            <tbody></tbody>
-          </table>
+        <div class="table-frame">
+          <div class="table-wrap" id="previewTableWrap">
+            <table class="data-table data-table--preview" id="previewTable">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
         <div class="table-pager" id="previewPager">
           <p class="muted" id="previewNote"></p>
@@ -204,36 +204,66 @@
           <pre class="json-panel__code" id="requestJson" tabindex="0"></pre>
         </details>
 
-        <div class="actions">
+        <div class="actions actions--bar">
           <button type="button" class="btn btn--secondary" id="btnBackUpload">Back</button>
-          <button type="button" class="btn btn--primary" id="btnProcess">Process matching</button>
+          <button type="button" class="btn btn--primary" id="btnProcess">
+            Process matching
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
         </div>
       </div>
     </section>
 
     <!-- STEP 3: Process -->
     <section class="panel step-panel" id="stepProcess" data-step="3" aria-labelledby="processHeading" hidden>
-      <div class="card card--center">
+      <div class="card card--center card--process">
         <h3 id="processHeading" class="sr-only">Processing</h3>
         <div class="progress" id="progress" role="status" aria-live="polite" aria-busy="true">
-          <div class="spinner" aria-hidden="true"></div>
+          <div class="process-visual" id="processVisual" aria-hidden="true">
+            <video
+              class="process-visual__video"
+              id="processVideo"
+              autoplay
+              muted
+              loop
+              playsinline
+              preload="auto"
+              disablepictureinpicture
+              disableremoteplayback
+              aria-hidden="true"
+              tabindex="-1"
+            >
+              <source src="assetcues-animation.webm" type="video/webm" />
+            </video>
+            <div class="process-visual__fallback">
+              <img src="assetcues-logo.png" alt="" width="180" height="48" decoding="async" />
+            </div>
+          </div>
           <p class="progress__label" id="progressLabel">Preparing…</p>
           <ol class="progress__steps" id="progressSteps">
-            <li data-phase="parsing">Parsing</li>
-            <li data-phase="calling">Calling API</li>
-            <li data-phase="building">Building Excel</li>
+            <li data-phase="parsing"><span class="progress__dot" aria-hidden="true"></span>Parsing</li>
+            <li data-phase="calling"><span class="progress__dot" aria-hidden="true"></span>Calling API</li>
+            <li data-phase="building"><span class="progress__dot" aria-hidden="true"></span>Building Excel</li>
           </ol>
           <div class="progress__bar" aria-hidden="true"><span id="progressBar"></span></div>
         </div>
         <div class="alert alert--error" id="processError" hidden>
-          <strong id="processErrorTitle">Something went wrong</strong>
-          <p id="processErrorBody"></p>
-          <div class="actions actions--inline">
-            <button type="button" class="btn btn--primary" id="btnRetry">Retry</button>
-            <button type="button" class="btn btn--secondary" id="btnCancelProcess">Cancel</button>
+          <div class="alert__icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          </div>
+          <div class="alert__content">
+            <strong id="processErrorTitle">Something went wrong</strong>
+            <p id="processErrorBody"></p>
+            <div class="actions actions--inline">
+              <button type="button" class="btn btn--primary" id="btnRetry">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 4v5h-5"/></svg>
+                Retry
+              </button>
+              <button type="button" class="btn btn--secondary" id="btnCancelProcess">Cancel</button>
+            </div>
           </div>
         </div>
-        <button type="button" class="btn btn--secondary" id="btnCancelApi" hidden>Cancel request</button>
+        <button type="button" class="btn btn--secondary btn--quiet" id="btnCancelApi" hidden>Cancel request</button>
       </div>
     </section>
 
@@ -241,7 +271,12 @@
     <section class="panel step-panel" id="stepDownload" data-step="4" aria-labelledby="downloadHeading" hidden>
       <div class="card">
         <div class="card__header">
-          <h3 id="downloadHeading">Matching complete</h3>
+          <div class="card__title-group">
+            <span class="success-mark" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+            </span>
+            <h3 id="downloadHeading">Matching complete</h3>
+          </div>
           <button type="button" class="btn btn--secondary btn--sm" id="btnReset">Start new request</button>
         </div>
 
@@ -249,7 +284,8 @@
 
         <div class="actions actions--prominent">
           <button type="button" class="btn btn--primary btn--lg" id="btnDownload">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            <svg class="btn__icon-default" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            <svg class="btn__icon-success" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
             Download Excel
           </button>
           <button type="button" class="btn btn--secondary btn--lg" id="btnStartNew">
@@ -258,11 +294,13 @@
         </div>
         <p class="muted download-hint">Done? Download your results, or start a new request to upload more assets (Excel or JSON).</p>
 
-        <div class="table-wrap table-wrap--results" id="resultsTableWrap">
-          <table class="data-table data-table--results" id="resultsTable">
-            <thead></thead>
-            <tbody></tbody>
-          </table>
+        <div class="table-frame">
+          <div class="table-wrap table-wrap--results" id="resultsTableWrap">
+            <table class="data-table data-table--results" id="resultsTable">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
         <div class="table-pager" id="resultsPager">
           <p class="muted" id="resultsNote"></p>
@@ -286,23 +324,24 @@
 
   <!-- Settings drawer -->
   <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
-  <aside class="drawer" id="settingsDrawer" aria-labelledby="settingsTitle" aria-hidden="true" role="dialog">
+  <aside class="drawer" id="settingsDrawer" aria-labelledby="settingsTitle" aria-hidden="true" aria-modal="true" role="dialog">
     <div class="drawer__header">
       <h2 id="settingsTitle">Settings</h2>
       <button type="button" class="icon-btn" id="btnCloseSettings" aria-label="Close settings">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
     <div class="drawer__body">
       <label class="field">
         <span class="field__label">API URL</span>
         <input type="url" id="settingApiUrl" class="field__input" placeholder="http://localhost:7071/api/asset_master_match" autocomplete="off" />
+        <span class="field__hint">Endpoint that receives the matching request (POST, JSON).</span>
       </label>
 
       <fieldset class="field">
         <legend class="field__label">Optional headers</legend>
         <div id="headerRows" class="header-rows"></div>
-        <button type="button" class="btn btn--ghost btn--sm" id="btnAddHeader">+ Add header</button>
+        <button type="button" class="btn btn--ghost btn--sm btn--add" id="btnAddHeader">+ Add header</button>
       </fieldset>
 
       <label class="field">
@@ -311,17 +350,19 @@
         <span class="field__hint">1–50 (API limit is 50). Assets are grouped by CustomerId and split into as many requests as needed; results are merged in order.</span>
       </label>
 
-      <label class="toggle">
-        <input type="checkbox" id="settingDemoMode" />
-        <span class="toggle__track" aria-hidden="true"></span>
-        <span class="toggle__label">Demo mode <span class="muted">(skip network, use sample response)</span></span>
-      </label>
+      <div class="field-group">
+        <label class="toggle">
+          <input type="checkbox" id="settingDemoMode" />
+          <span class="toggle__track" aria-hidden="true"></span>
+          <span class="toggle__label">Demo mode <span class="muted">(skip network, use sample response)</span></span>
+        </label>
 
-      <label class="toggle">
-        <input type="checkbox" id="settingIncludePayloadSheet" />
-        <span class="toggle__track" aria-hidden="true"></span>
-        <span class="toggle__label">Include “Request Payload” sheet in Excel</span>
-      </label>
+        <label class="toggle">
+          <input type="checkbox" id="settingIncludePayloadSheet" />
+          <span class="toggle__track" aria-hidden="true"></span>
+          <span class="toggle__label">Include “Request Payload” sheet in Excel</span>
+        </label>
+      </div>
     </div>
     <div class="drawer__footer">
       <button type="button" class="btn btn--secondary" id="btnResetSettings">Reset defaults</button>
@@ -333,5 +374,6 @@
   <div class="toast-region" id="toastRegion" aria-live="polite" aria-relevant="additions"></div>
 
   <script src="app.js"></script>
+  <script src="ui.js"></script>
 </body>
 </html>
